@@ -51,6 +51,8 @@ exports.unifyDiffResult = unifyDiffResult;
 exports.getBrokerAgentCredsFromManifest = getBrokerAgentCredsFromManifest;
 exports.initializeEventListener = initializeEventListener;
 exports.buildErrorJson = buildErrorJson;
+exports.deploymentLocked = deploymentLocked;
+exports.deploymentStaggered = deploymentStaggered;
 
 function streamToPromise(stream, options) {
   const encoding = _.get(options, 'encoding', 'utf8');
@@ -448,9 +450,11 @@ function hasChangesInForbiddenSections(diff) {
     .value();
 
   if (!_.isEmpty(forbiddenSections) && !_.includes(forbiddenSections, 'director_uuid')) {
+    const boshLinks = _.filter(diff, element => _.includes(element[0], 'consumes'));
     const forbiddenSectionsDiff = _.filter(diff, element => _.includes(element[0], 'instances') || _.includes(element[0], 'persistent_disk_type'));
     const removedJobName = findRemovedJob();
-    if (!_.isEmpty(forbiddenSectionsDiff) || removedJobName) {
+    const isDiffForbidden = _.isEmpty(boshLinks) && !_.isEmpty(forbiddenSectionsDiff);
+    if (isDiffForbidden || removedJobName) {
       throw new errors.Forbidden(`Automatic update not possible. ${!_.isEmpty(forbiddenSectionsDiff) ? 'Detected changes in forbidden sections:' + forbiddenSectionsDiff.join(',') : `Job definition removed: ${removedJobName[0]}`}`);
     }
   }
@@ -504,4 +508,18 @@ function buildErrorJson(err, message) {
     status: err.status,
     message: message ? message : err.message
   };
+}
+
+function deploymentLocked(err) {
+  const response = _.get(err, 'error', {});
+  const description = _.get(response, 'description', '');
+  return description.indexOf(CONST.OPERATION_TYPE.LOCK) > 0 &&
+    _.includes([_.get(err, 'status'), _.get(err, 'statusCode'), _.get(response, 'status')], CONST.HTTP_STATUS_CODE.UNPROCESSABLE_ENTITY);
+}
+
+
+function deploymentStaggered(err) {
+  const response = _.get(err, 'error', {});
+  const description = _.get(response, 'description', '');
+  return description.indexOf(CONST.FABRIK_OPERATION_STAGGERED) > 0 && description.indexOf(CONST.FABRIK_OPERATION_COUNT_EXCEEDED) > 0;
 }

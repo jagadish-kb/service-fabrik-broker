@@ -357,7 +357,8 @@ module.exports = Object.freeze({
       BACKUP: 'backup',
       RESTORE: 'restore',
       MULTI_TENANCY: 'multi_tenancy'
-    }
+    },
+    OPERATION_TIMEOUT_IN_MILLIS: 35000
   },
   STATE: {
     ACTIVE: 'active',
