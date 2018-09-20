@@ -119,7 +119,8 @@ module.exports = Object.freeze({
     BLUEPRINT_JOB: 'BluePrintJob',
     BACKUP_REAPER: 'BackupReaper',
     SERVICE_INSTANCE_UPDATE: 'ServiceInstanceAutoUpdate',
-    DB_COLLECTION_REAPER: 'DbCollectionReaper'
+    DB_COLLECTION_REAPER: 'DbCollectionReaper',
+    METER_INSTANCE: 'MeterInstance'
   },
   JOB_RUN_STATUS_CODE: {
     SUCCEEDED: '0'
@@ -274,7 +275,9 @@ module.exports = Object.freeze({
       DEPLOYMENT: 'deployment.servicefabrik.io',
       BIND: 'bind.servicefabrik.io',
       BACKUP: 'backup.servicefabrik.io',
-      RESTORE: 'backup.servicefabrik.io'
+      RESTORE: 'backup.servicefabrik.io',
+      INSTANCE: 'instance.servicefabrik.io',
+      METER: 'meter.servicefabrik.io'
     },
     RESOURCE_TYPES: {
       DEPLOYMENT_LOCKS: 'deploymentlocks',
@@ -285,7 +288,9 @@ module.exports = Object.freeze({
       DOCKER_BIND: 'dockerbinds',
       VIRTUALHOST_BIND: 'virtualhostbinds',
       DEFAULT_BACKUP: 'defaultbackups',
-      DEFAULT_RESTORE: 'defaultrestores'
+      DEFAULT_RESTORE: 'defaultrestores',
+      EVENT: 'sfevents',
+      PLAN: 'plans'
     },
     RESOURCE_STATE: {
       IN_QUEUE: 'in_queue',
@@ -308,6 +313,16 @@ module.exports = Object.freeze({
     },
     WRITE_OPERATIONS: ['create', 'update', 'delete', 'restore'],
     READ_OPERATIONS: ['backup'],
+  },
+  SFEVENT_TYPE: {
+    CREATE_INSTANCE: 'create_instance',
+    UPDATE_INSTANCE: 'update_instance',
+    DELETE_INSTANCE: 'delete_instance'
+  },
+  METER_STATE: {
+    TO_BE_METERED: 'TO_BE_METERED',
+    METERED: 'METERED',
+    FAILED: 'FAILED'
   },
   SERVICE_KEYS: {
     ATTRIBUTES: 'attributes',

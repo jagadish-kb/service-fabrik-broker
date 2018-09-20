@@ -183,6 +183,27 @@ class ApiServerClient {
     };
   }
 
+  unRegisterCrds(resourceGroup, resourceType) {
+    logger.info(`Registering CRDs for ${resourceGroup}, ${resourceType}`);
+    const crdJson = this.getCrdJson(resourceGroup, resourceType);
+    return Promise.try(() => this.init())
+      .then(() => {
+        return apiserver.apis[CONST.APISERVER.CRD_RESOURCE_GROUP].v1beta1.customresourcedefinitions(crdJson.metadata.name).delete()
+          .catch(err => {
+            return convertToHttpErrorAndThrow(err);
+          });
+      })
+      .catch(NotFound, () => {
+        logger.info(`CRD with resourcegroup ${resourceGroup} and resource ${resourceType} not yet registered, registering it now..`);
+        return apiserver.apis[CONST.APISERVER.CRD_RESOURCE_GROUP].v1beta1.customresourcedefinitions.post({
+          body: crdJson
+        });
+      })
+      .catch(err => {
+        return convertToHttpErrorAndThrow(err);
+      });
+  }
+
   registerCrds(resourceGroup, resourceType) {
     logger.info(`Registering CRDs for ${resourceGroup}, ${resourceType}`);
     const crdJson = this.getCrdJson(resourceGroup, resourceType);
@@ -428,6 +449,46 @@ class ApiServerClient {
           }
         });
         return resource.body;
+      })
+      .catch(err => {
+        return convertToHttpErrorAndThrow(err);
+      });
+  }
+
+  getResources(opts) {
+    logger.debug('Get resources with opts: ', opts);
+    assert.ok(opts.resourceGroup, `Property 'resourceGroup' is required to get resource`);
+    assert.ok(opts.resourceType, `Property 'resourceType' is required to get resource`);
+    let query = {};
+    if (opts.query) {
+      query.qs = opts.query;
+    }
+    return Promise.try(() => this.init())
+      .then(() => apiserver.apis[opts.resourceGroup][CONST.APISERVER.API_VERSION]
+        .namespaces(CONST.APISERVER.NAMESPACE)[opts.resourceType].get(query))
+      .then(response => {
+        const resources = _.get(response, 'body.items', []);
+        _.forEach(resources, (resource) => {
+          logger.debug('resource -', resource);
+          _.forEach(resource.spec, (val, key) => {
+            try {
+              resource.spec[key] = JSON.parse(val);
+            } catch (err) {
+              resource.spec[key] = val;
+            }
+          });
+          _.forEach(resource.status, (val, key) => {
+            try {
+              resource.status[key] = JSON.parse(val);
+            } catch (err) {
+              resource.status[key] = val;
+            }
+          });
+        });
+        if (resources.length > 0) {
+          return _.sortBy(resources, ['metadata.creationTimeStamp']);
+        }
+        return [];
       })
       .catch(err => {
         return convertToHttpErrorAndThrow(err);

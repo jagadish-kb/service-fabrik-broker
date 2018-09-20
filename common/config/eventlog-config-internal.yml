@@ -33,6 +33,7 @@ defaults:
     - update
   DELETE:
     enabled: true
+    publish_synch: true
     event_name: delete_instance
     description: Delete service instance
     tags:
@@ -81,17 +82,20 @@ defaults:
       - restore
     create:
       event_name: create_instance
+      publish_synch: true
       description: Create a new service instance
       tags:
       - create
       log_inprogress_state: false
     update:
+      publish_synch: true
       event_name: update_instance
       description: Update existing service instance
       tags:
       - update
       log_inprogress_state: false
     delete:
+      publish_synch: true
       event_name: delete_instance
       description: Delete service instance
       tags:

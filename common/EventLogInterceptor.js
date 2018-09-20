@@ -270,6 +270,12 @@ class EventLogInterceptor {
       if (eventConfig.log_inprogress_state || this.isOperationComplete(req.statusCode, eventConfig)) {
         const [eventInfo, operationConfig] = this.createEventDetails(req, res, eventConfig, data);
         if (eventInfo) {
+          if (eventConfig.publish_synch) {
+            pubsub.publishSync(`${this.eventType}_SYNCH`, {
+              event: eventInfo,
+              config: operationConfig
+            });
+          }
           logger.info(this.formatAuditMessage(res.statusCode, eventInfo));
           pubsub.publish(this.eventType, {
             event: eventInfo,
