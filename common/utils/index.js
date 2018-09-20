@@ -15,7 +15,6 @@ const randomBytes = Promise.promisify(crypto.randomBytes);
 const EventLogRiemannClient = require('./EventLogRiemannClient');
 const EventLogDomainSocketClient = require('./EventLogDomainSocketClient');
 const EventLogDBClient = require('./EventLogDBClient');
-const EventLogApiServerClient = require('./EventLogApiServerClient');
 const EventLogInterceptor = require('../EventLogInterceptor');
 const errors = require('../errors');
 exports.HttpClient = HttpClient;
@@ -84,6 +83,7 @@ function initializeEventListener(appConfig, appType) {
     .set('event_type', appConfig.event_type)
     .value();
   const riemannClient = new EventLogRiemannClient(riemannOptions);
+  const EventLogApiServerClient = require('./EventLogApiServerClient');
   const eventLogAPIServerClient = new EventLogApiServerClient({
     event_type: appConfig.event_type
   });
