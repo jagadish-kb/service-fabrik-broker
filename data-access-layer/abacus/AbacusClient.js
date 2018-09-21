@@ -1,6 +1,5 @@
 'use strict';
 
-const Promise = require('bluebird');
 const config = require('../../common/config');
 const HttpClient = require('../../common/utils/HttpClient');
 const CONST = require('../../common/constants');
@@ -42,16 +41,15 @@ class AbacusClient extends HttpClient {
   }
 
   registerPlan(payLoad) {
-    // return this
-    //   .request({
-    //     method: 'POST',
-    //     url: '/v1/mappings',
-    //     json: true,
-    //     body: payLoad
-    //   }, CONST.HTTP_STATUS_CODE.OK)
-    //   .then(res => res.body)
-    //   .tap(res => logger.debug('Register plan response : ', res));
-    return Promise.try(() => true);
+    return this
+      .request({
+        method: 'POST',
+        url: '/v1/mappings',
+        json: true,
+        body: payLoad
+      }, CONST.HTTP_STATUS_CODE.OK)
+      .then(res => res.body)
+      .tap(res => logger.debug('Register plan response : ', res));
   }
 }
 module.exports = new AbacusClient();

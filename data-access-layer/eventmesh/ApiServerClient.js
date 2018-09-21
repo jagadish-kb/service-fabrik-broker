@@ -469,7 +469,6 @@ class ApiServerClient {
       .then(response => {
         const resources = _.get(response, 'body.items', []);
         _.forEach(resources, (resource) => {
-          logger.debug('resource -', resource);
           _.forEach(resource.spec, (val, key) => {
             try {
               resource.spec[key] = JSON.parse(val);

@@ -273,11 +273,13 @@ class EventLogInterceptor {
       if (eventConfig.log_inprogress_state || this.isOperationComplete(req.statusCode, eventConfig)) {
         const [eventInfo, operationConfig] = this.createEventDetails(req, res, eventConfig, data);
         if (eventInfo) {
-          if (eventConfig.publish_synch) {
+          if (operationConfig.publish_synch) {
+            logger.info('Publishing message synchronously.....');
+            pubsub.immediateExceptions = true;
             pubsub.publishSync(`${this.eventType}_SYNCH`, {
               event: eventInfo,
               config: operationConfig
-            });
+            }, true, true);
           }
           logger.info(this.formatAuditMessage(res.statusCode, eventInfo));
           pubsub.publish(this.eventType, {
