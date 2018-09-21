@@ -208,6 +208,8 @@ defaults: &defaults
       "deployment.servicefabrik.io_v1alpha1_dockers.yaml": <%= base64_template('crds/deployment.servicefabrik.io_v1alpha1_dockers.yaml') %>
       "deployment.servicefabrik.io_v1alpha1_virtualhosts.yaml": <%= base64_template('crds/deployment.servicefabrik.io_v1alpha1_virtualhosts.yaml') %>
       "bind.servicefabrik.io_v1alpha1_virtualhostbinds.yaml": <%= base64_template('crds/bind.servicefabrik.io_v1alpha1_virtualhostbinds.yaml') %>
+      "instance.servicefabrik.io_v1alpha1_sfevents.yaml": <%= base64_template('crds/instance.servicefabrik.io_v1alpha1_events.yaml') %>
+      "meter.servicefabrik.io_v1alpha1_plans.yaml": <%= base64_template('crds/meter.servicefabrik.io_v1alpha1_plans.yaml') %>
 
   ##############################
   # REPORT ENDPOINT SETTINGS #
@@ -280,7 +282,7 @@ defaults: &defaults
   # SCHEDULER SETTINGS #
   ######################
   scheduler:
-    job_types: ScheduledBackup, BluePrintJob, ScheduledOobDeploymentBackup, OperationStatusPoller, BackupReaper, ServiceInstanceAutoUpdate, DbCollectionReaper
+    job_types: ScheduledBackup, BluePrintJob, ScheduledOobDeploymentBackup, OperationStatusPoller, BackupReaper, ServiceInstanceAutoUpdate, DbCollectionReaper, MeterInstance
     process_every: '3 minutes' # Process every 3 min by default
     run_with_web_process: true #if this flag is either undefined or set to true, then agenda scheduler can run along within web process
     max_workers: 2 # Can throttle the number of job workers to a value lesser than default number of cpus
@@ -335,6 +337,18 @@ defaults: &defaults
             - name : EventDetail
               retention_in_days: 90
         enabled: true
+      - name: 'Meter_Instance'
+        type: MeterInstance
+        interval: '07 11 * * *'
+        job_data:
+          retry_count: 3
+        enabled: true
+
+  #######################
+  # METERING SETTINGS #
+  #######################
+  abacus:
+    url: https://test2-abacus-sampler-collector.cfapps.sap.hana.ondemand.com
 
   #######################
   # MONITORING SETTINGS #
@@ -349,7 +363,8 @@ defaults: &defaults
     inprogress_metric: 2
     event_name_prefix: broker.0.service-fabrik
     include_response_body: false
-    events_logged_in_db: create_backup, update_instance
+    events_logged_in_db: create_backup, update_instance, create_instance, delete_instance
+    events_logged_in_apiserver: create_instance, update_instance, delete_instance
     unauthorized:
       http_status:
       - 401
