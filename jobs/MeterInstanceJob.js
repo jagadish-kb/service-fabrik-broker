@@ -85,7 +85,7 @@ class MeterInstanceJob extends BaseJob {
       resourceGroup: CONST.APISERVER.RESOURCE_GROUPS.INSTANCE,
       resourceType: CONST.APISERVER.RESOURCE_TYPES.EVENT,
       query: {
-        labelSelector: `meter_state=${CONST.METER_STATE.TO_BE_METERED}`
+        labelSelector: `meter_state in (${CONST.METER_STATE.TO_BE_METERED}, ${CONST.OPERATION.FAILED})`
       }
     };
     return apiServerClient.getResources(options);

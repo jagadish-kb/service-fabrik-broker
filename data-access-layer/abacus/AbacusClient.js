@@ -35,7 +35,7 @@ class AbacusClient extends HttpClient {
         url: '/v1/events/stop',
         json: true,
         body: payLoad
-      }, CONST.HTTP_STATUS_CODE.OK)
+      }, CONST.HTTP_STATUS_CODE.ACCEPTED)
       .then(res => res.body)
       .tap(res => logger.debug('End event response : ', res));
   }
@@ -47,7 +47,7 @@ class AbacusClient extends HttpClient {
         url: '/v1/mappings',
         json: true,
         body: payLoad
-      }, CONST.HTTP_STATUS_CODE.OK)
+      }, CONST.HTTP_STATUS_CODE.CREATED)
       .then(res => res.body)
       .tap(res => logger.debug('Register plan response : ', res));
   }
