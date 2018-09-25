@@ -21,7 +21,7 @@ class UnlockResourcePoller {
           resourceId: lockDetails.lockedResourceDetails.resourceId
         })
         .then(resourceState => {
-          logger.debug(`[Unlock Poller] Got resource ${lockDetails.lockedResourceDetails.resourceId} state of ${lockDetails.lockedResourceDetails.operation}` +
+          logger.silly(`[Unlock Poller] Got resource ${lockDetails.lockedResourceDetails.resourceId} state of ${lockDetails.lockedResourceDetails.operation}` +
             ` operation for deployment ${object.metadata.name} as`, resourceState);
           //TODO-PR - re use util method is operationCompleted.
           if (_.includes([
@@ -67,11 +67,11 @@ class UnlockResourcePoller {
     const queryString = `state notin (${CONST.APISERVER.RESOURCE_STATE.UNLOCKED})`;
     return eventmesh.apiServerClient.registerWatcher(CONST.APISERVER.RESOURCE_GROUPS.LOCK, CONST.APISERVER.RESOURCE_TYPES.DEPLOYMENT_LOCKS, startPoller, queryString)
       .then(stream => {
-        logger.debug(`Successfully set watcher on resource group ${CONST.APISERVER.RESOURCE_GROUPS.LOCK} and resource ${CONST.APISERVER.RESOURCE_TYPES.DEPLOYMENT_LOCKS}`);
+        logger.silly(`Successfully set watcher on resource group ${CONST.APISERVER.RESOURCE_GROUPS.LOCK} and resource ${CONST.APISERVER.RESOURCE_TYPES.DEPLOYMENT_LOCKS}`);
         return Promise
           .delay(CONST.APISERVER.WATCHER_REFRESH_INTERVAL)
           .then(() => {
-            logger.debug(`Refreshing stream after ${CONST.APISERVER.WATCHER_REFRESH_INTERVAL}`);
+            logger.silly(`Refreshing stream after ${CONST.APISERVER.WATCHER_REFRESH_INTERVAL}`);
             stream.abort();
             return this.start();
           });
@@ -87,7 +87,7 @@ class UnlockResourcePoller {
       });
   }
   static clearPoller(resourceId, intervalId) {
-    logger.debug(`Clearing unlock interval for deployment`, resourceId);
+    logger.silly(`Clearing unlock interval for deployment`, resourceId);
     if (intervalId) {
       clearInterval(intervalId);
     }

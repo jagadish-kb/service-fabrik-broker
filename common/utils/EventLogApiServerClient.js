@@ -6,6 +6,8 @@ const config = require('../config');
 const logger = require('../logger');
 const CONST = require('../constants');
 const errors = require('../errors');
+const utils = require('../../common/utils');
+const catalog = require('../../common/models/catalog');
 const eventmesh = require('../../data-access-layer/eventmesh');
 
 class EventLogApiServerClient {
@@ -39,11 +41,49 @@ class EventLogApiServerClient {
       if (eventName && this.eventsToBeLogged.indexOf(eventName) !== -1) {
         logger.debug(`${eventName} configured to be logged into APIServer`);
         const eventInfo = _.cloneDeep(data.event);
+        if ((eventInfo.eventName === CONST.SFEVENT_TYPE.CREATE_INSTANCE || eventInfo.UPDATE_INSTANCE) &&
+          eventInfo.metric !== config.monitoring.success_metric) {
+          return;
+          //If not success, then no need to meter create or update.
+        }
         eventInfo.eventName = eventName;
         eventInfo.completeEventName = completeEventName;
-        this.logEvent(eventInfo);
+        let events = [];
+        events[0] = eventInfo;
+        if (eventName === CONST.SFEVENT_TYPE.UPDATE_INSTANCE) {
+          events = this.convertUpdateToStartAndStopEvents(eventInfo);
+        }
+        const log = (event) => this.logEvent(event);
+        for (let x = 0; x < events.length; x++) {
+          //Adding in a delay of 1 sec to just ensure stop event and start event have a sec diff among them.
+          setTimeout(() => log(events[x]), x * 1000);
+          //this.logEvent(events[x]);
+        }
       }
     }
+  }
+
+  convertUpdateToStartAndStopEvents(eventInfo) {
+    const operation = utils.decodeBase64(eventInfo.request.operation);
+    logger.info('Operation is -', operation);
+    if (!operation.plan_update) {
+      return [];
+    }
+    const stopEvent = _.cloneDeep(eventInfo);
+    stopEvent.request.plan_id = operation.previous_plan_id;
+    stopEvent.eventName = CONST.SFEVENT_TYPE.DELETE_INSTANCE;
+    let completeEventName = eventInfo.completeEventName.split('.');
+    completeEventName[completeEventName.length - 1] = CONST.SFEVENT_TYPE.DELETE_INSTANCE;
+    stopEvent.completeEventName = completeEventName.join('.');
+
+    const startEvent = _.cloneDeep(eventInfo);
+    startEvent.eventName = CONST.SFEVENT_TYPE.CREATE_INSTANCE;
+    startEvent.request.plan_id = operation.plan_id;
+    completeEventName = startEvent.completeEventName.split('.');
+    completeEventName[completeEventName.length - 1] = CONST.SFEVENT_TYPE.CREATE_INSTANCE;
+    startEvent.completeEventName = completeEventName.join('.');
+    logger.info('Sending start and stop event for update - ');
+    return [stopEvent, startEvent];
   }
 
   logEvent(eventInfo) {
@@ -56,15 +96,25 @@ class EventLogApiServerClient {
       type: eventInfo.eventName,
       meter_state: CONST.METER_STATE.TO_BE_METERED
     };
-    return eventmesh.apiServerClient.createResource({
-        resourceGroup: CONST.APISERVER.RESOURCE_GROUPS.INSTANCE,
-        resourceType: CONST.APISERVER.RESOURCE_TYPES.EVENT,
-        resourceId: `${eventInfo.instanceId}.${eventInfo.eventName.replace('_', '-')}`,
-        labels: labels,
-        options: eventInfo,
-        status: {
-          meter_state: CONST.METER_STATE.TO_BE_METERED
-        }
+    const plan = catalog.getPlan(eventInfo.request.plan_id);
+    return eventmesh.apiServerClient.getResource({
+        resourceGroup: plan.manager.resource_mappings.resource_group,
+        resourceType: plan.manager.resource_mappings.resource_type,
+        resourceId: eventInfo.instanceId
+      })
+      .tap(resource => logger.silly('Recieved Resource to be logged...- ', JSON.stringify(resource)))
+      .then(resource => {
+        eventInfo.request.context = resource.spec.options.context;
+        return eventmesh.apiServerClient.createResource({
+          resourceGroup: CONST.APISERVER.RESOURCE_GROUPS.INSTANCE,
+          resourceType: CONST.APISERVER.RESOURCE_TYPES.EVENT,
+          resourceId: `${eventInfo.request.plan_id}.${eventInfo.instanceId}.${eventInfo.eventName.replace('_', '-')}`,
+          labels: labels,
+          options: eventInfo,
+          status: {
+            meter_state: CONST.METER_STATE.TO_BE_METERED
+          }
+        });
       })
       .tap(() => logger.debug(`Successfully logged event resource in API Server with instance Id: ${eventInfo.instanceId} `))
       .catch(errors.Conflict, () => logger.info('event already logged. Ignoring subsequent entry!'));

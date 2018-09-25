@@ -67,7 +67,8 @@ class ServiceBrokerApiController extends FabrikBaseController {
       if (plan.manager.async) {
         statusCode = CONST.HTTP_STATUS_CODE.ACCEPTED;
         body.operation = utils.encodeBase64({
-          'type': 'create'
+          type: 'create',
+          context: req.context
         });
       }
       res.status(statusCode).send(body);
@@ -121,9 +122,16 @@ class ServiceBrokerApiController extends FabrikBaseController {
       let body = {};
       if (plan.manager.async) {
         statusCode = CONST.HTTP_STATUS_CODE.ACCEPTED;
-        body.operation = utils.encodeBase64({
+        const operation = {
           'type': 'update'
-        });
+        };
+        if (planId !== params.previous_values.plan_id) {
+          operation.plan_update = true;
+          operation.plan_id = planId;
+          operation.previous_plan_id = params.previous_values.plan_id;
+          operation.context = req.context;
+        }
+        body.operation = utils.encodeBase64(operation);
       }
       res.status(statusCode).send(body);
     }

@@ -426,7 +426,7 @@ class ApiServerClient {
    * @param {string} opts.resourceId - Type of operation
    */
   getResource(opts) {
-    logger.debug('Get resource with opts: ', opts);
+    logger.silly('Get resource with opts: ', opts);
     assert.ok(opts.resourceGroup, `Property 'resourceGroup' is required to get resource`);
     assert.ok(opts.resourceType, `Property 'resourceType' is required to get resource`);
     assert.ok(opts.resourceId, `Property 'resourceId' is required to get resource`);

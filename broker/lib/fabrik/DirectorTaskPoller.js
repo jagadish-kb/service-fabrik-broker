@@ -44,7 +44,7 @@ pubsub.subscribe(CONST.TOPIC.APP_STARTUP, (eventName, eventInfo) => {
   if (eventInfo.type === 'internal' && config.enable_bosh_rate_limit && config.etcd) {
     pollerInstance.start();
   } else {
-    logger.debug('Bosh Rate Limiting is not enabled');
+    logger.info('Bosh Rate Limiting is not enabled');
   }
 });
 

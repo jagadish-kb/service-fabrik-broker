@@ -186,9 +186,9 @@ class LockManager {
     // assert.ok(lockId, `Parameter 'lockId' is required to release lock`);
     maxRetryCount = maxRetryCount || CONST.APISERVER.MAX_RETRY_UNLOCK;
     retryDelay = retryDelay || CONST.APISERVER.RETRY_DELAY;
-    logger.info(`Attempting to unlock resource ${resourceId}`);
+    logger.silly(`Attempting to unlock resource ${resourceId}`);
     return utils.retry(tries => {
-      logger.info(`+-> Attempt ${tries + 1} to unlock resource ${resourceId}`);
+      logger.debug(`+-> Attempt ${tries + 1} to unlock resource ${resourceId}`);
       const opts = {
         resourceGroup: CONST.APISERVER.RESOURCE_GROUPS.LOCK,
         resourceType: CONST.APISERVER.RESOURCE_TYPES.DEPLOYMENT_LOCKS,
