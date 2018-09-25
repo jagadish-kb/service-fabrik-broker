@@ -88,6 +88,7 @@ class ServiceBrokerApiController extends FabrikBaseController {
           options: params,
           status: {
             state: CONST.APISERVER.RESOURCE_STATE.IN_QUEUE,
+            meter_state: CONST.METER_STATE.TO_BE_METERED,
             lastOperation: {},
             response: {}
           }
@@ -154,6 +155,7 @@ class ServiceBrokerApiController extends FabrikBaseController {
           options: params,
           status: {
             state: CONST.APISERVER.RESOURCE_STATE.UPDATE,
+            meter_state: planId !== params.previous_values.plan_id ? CONST.METER_STATE.TO_BE_METERED : CONST.OPERATION.SUCCEEDED,
             lastOperation: {},
             response: {}
           }
@@ -220,6 +222,7 @@ class ServiceBrokerApiController extends FabrikBaseController {
           options: params,
           status: {
             state: CONST.APISERVER.RESOURCE_STATE.DELETE,
+            meter_state: CONST.METER_STATE.TO_BE_METERED,
             lastOperation: {},
             response: {}
           }

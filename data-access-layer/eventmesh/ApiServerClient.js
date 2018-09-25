@@ -271,9 +271,9 @@ class ApiServerClient {
     if (opts.status) {
       const statusJson = {};
       _.forEach(opts.status, (val, key) => {
-        if (key === 'state') {
+        if (key === 'state' || key === 'meter_state') {
           resourceBody.metadata.labels = _.merge(resourceBody.metadata.labels, {
-            'state': val
+            key: val
           });
         }
         statusJson[key] = _.isObject(val) ? JSON.stringify(val) : val;
@@ -319,10 +319,10 @@ class ApiServerClient {
         if (opts.status) {
           const statusJson = {};
           _.forEach(opts.status, (val, key) => {
-            if (key === 'state') {
+            if (key === 'state' || key === 'meter_state') {
               patchBody.metadata = _.merge(patchBody.metadata, {
                 labels: {
-                  'state': val
+                  key: val
                 }
               });
             }
@@ -363,6 +363,9 @@ class ApiServerClient {
           const oldResponse = _.get(resource, 'status.response');
           const response = _.merge(oldResponse, opts.status.response);
           _.set(opts.status, 'response', response);
+        }
+        if (opts.status) {
+          opts.status = _.merge(resource.status, opts.status);
         }
         if (opts.options && resource.spec) {
           const oldOptions = _.get(resource, 'spec.options');

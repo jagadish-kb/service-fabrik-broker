@@ -148,7 +148,7 @@ class MeterInstanceJob extends BaseJob {
           return false;
         }
       })
-      .then(validEvent => validEvent ? this.updateMeterState(CONST.OPERATION.SUCCEEDED, instanceId, eventType, event) : false)
+      .then(validEvent => validEvent ? this.updateMeterState(CONST.OPERATION.SUCCEEDED, planId, instanceId, eventType, event) : false)
       .return(true)
       .catch(err => {
         logger.error('Error occurred while metering event : ', event);
@@ -198,19 +198,28 @@ class MeterInstanceJob extends BaseJob {
     };
   }
 
-  static updateMeterState(status, instanceId, eventType, event) {
+  static updateMeterState(status, planId, instanceId, eventType, event) {
     const metadata = event.metadata;
     metadata.labels.meter_state = status;
     return apiServerClient.updateResource({
         resourceGroup: CONST.APISERVER.RESOURCE_GROUPS.INSTANCE,
         resourceType: CONST.APISERVER.RESOURCE_TYPES.EVENT,
-        resourceId: `${instanceId}.${eventType.replace('_', '-')}`,
+        resourceId: `${planId}.${instanceId}.${eventType.replace('_', '-')}`,
         metadata: metadata,
         status: {
           meter_state: status
         }
       })
-      .tap((response) => logger.info('Successfully updated meter state : ', response));
+      .tap((response) => logger.info('Successfully updated meter state : ', response))
+      .then(() => apiServerClient.patchResource({
+        resourceGroup: CONST.APISERVER.RESOURCE_GROUPS.DEPLOYMENT,
+        resourceType: CONST.APISERVER.RESOURCE_TYPES.DIRECTOR,
+        resourceId: instanceId,
+        status: {
+          meter_state: status
+        }
+      }))
+      .tap(() => logger.info('Updated meter state on the resource.'));
   }
 }
 
