@@ -257,6 +257,8 @@ class ApiServerClient {
     if (opts.labels) {
       // TODO-PR: revisit key name instance_guid
       metadata.labels = opts.labels;
+    } else {
+      metadata.labels = {};
     }
     const crdJson = this.getCrdJson(opts.resourceGroup, opts.resourceType);
     const resourceBody = {
@@ -272,9 +274,7 @@ class ApiServerClient {
       const statusJson = {};
       _.forEach(opts.status, (val, key) => {
         if (key === 'state' || key === 'meter_state') {
-          resourceBody.metadata.labels = _.merge(resourceBody.metadata.labels, {
-            key: val
-          });
+          resourceBody.metadata.labels[key] = val;
         }
         statusJson[key] = _.isObject(val) ? JSON.stringify(val) : val;
       });
@@ -310,6 +310,8 @@ class ApiServerClient {
         const patchBody = {};
         if (opts.metadata) {
           patchBody.metadata = opts.metadata;
+        } else {
+          patchBody.metadata = patchBody.metadata || {};
         }
         if (opts.options) {
           patchBody.spec = {
@@ -320,11 +322,8 @@ class ApiServerClient {
           const statusJson = {};
           _.forEach(opts.status, (val, key) => {
             if (key === 'state' || key === 'meter_state') {
-              patchBody.metadata = _.merge(patchBody.metadata, {
-                labels: {
-                  key: val
-                }
-              });
+              patchBody.metadata.labels = patchBody.metadata.labels || {};
+              patchBody.metadata.labels[key] = val;
             }
             statusJson[key] = _.isObject(val) ? JSON.stringify(val) : val;
           });
